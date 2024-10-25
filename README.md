@@ -7,7 +7,7 @@ A small CLI to mark items watched on trakt. This lets you:
 - Remove recently watched items from your history
 - Query your recent history
 
-This uses [traktexport](https://github.com/seanbreckenridge/traktexport) internally to authenticate, so follow the steps [here](https://github.com/seanbreckenridge/traktexport#auth) to login/setup your credentials.
+This uses [traktexport](https://github.com/purarue/traktexport) internally to authenticate, so follow the steps [here](https://github.com/purarue/traktexport#auth) to login/setup your credentials.
 
 ## Installation
 
@@ -129,7 +129,7 @@ lb () {
 ### Tests
 
 ```bash
-git clone 'https://github.com/seanbreckenridge/trakt-watch'
+git clone 'https://github.com/purarue/trakt-watch'
 cd ./trakt_watch
 pip install '.[testing]'
 pytest
