@@ -297,39 +297,52 @@ def _pick_item(
     return items[choice - 1]
 
 
-def _search_trakt() -> Input:
+SEARCH_MAPPING = {
+    "M": "movie",
+    "S": "show",
+    "I": "show",
+    "E": "episode",
+    "A": None,
+}
+
+
+def _search_trakt(
+    *, default_media_type: str | None = None, prompt_str: str = ""
+) -> Input:
     # prompt user to ask if they want to search for a
     # particular type of media, else just search for all
     # types
-    click.echo(
-        "[M]ovie\n[S]how\n[E]pisode name\nEp[I]sode - Show w/ Season/Episode num\n[U]rl\n[A]ll\nWhat type of media do you want to search for? ",
-        nl=False,
-    )
-    pressed = click.getchar().upper()
-    click.echo()
-    if pressed.strip() == "":
-        click.secho("No input", fg="red")
-    elif pressed not in allowed:
-        click.secho(
-            f"'{pressed}', should be one of ({', '.join(allowed)})",
-            fg="red",
+    pressed: str | None = None
+    media_type: Optional[str] = None
+    if default_media_type is not None and default_media_type in SEARCH_MAPPING.values():
+        media_type = default_media_type
+    else:
+        click.echo(
+            "[M]ovie\n[S]how\n[E]pisode name\nEp[I]sode - Show w/ Season/Episode num\n[U]rl\n[A]ll\nWhat type of media do you want to search for? ",
+            nl=False,
         )
-    elif pressed == "U":
-        urlp = click.prompt("Url", type=str)
-        return _parse_url_to_input(urlp)
-    # 'movie', 'show', 'episode', or 'person'
-    pressed = pressed if pressed in allowed else "A"
-    media_type: Optional[str] = {
-        "M": "movie",
-        "S": "show",
-        "I": "show",
-        "E": "episode",
-        "A": None,
-    }.get(pressed)
+        pressed = click.getchar().upper()
+        click.echo()
+        if pressed.strip() == "":
+            click.secho("No input", fg="red")
+        elif pressed not in allowed:
+            click.secho(
+                f"'{pressed}', should be one of ({', '.join(allowed)})",
+                fg="red",
+            )
+        elif pressed == "U":
+            urlp = click.prompt("Url", type=str)
+            return _parse_url_to_input(urlp)
+        # 'movie', 'show', 'episode', or 'person'
+        pressed = pressed if pressed in allowed else "A"
+        media_type = SEARCH_MAPPING.get(pressed)
 
     from trakt.sync import search  # type: ignore[import]
 
-    search_term = click.prompt(f"Search for {media_type or 'all'}", type=str)
+    if prompt_str.strip():
+        search_term = prompt_str
+    else:
+        search_term = click.prompt(f"Search for {media_type or 'all'}", type=str)
     results = search(search_term, search_type=media_type)  # type: ignore[arg-type]
 
     if not results:
