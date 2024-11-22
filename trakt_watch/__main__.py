@@ -184,7 +184,7 @@ def _mark_watched(
             _print_response(tv.mark_as_seen(watched_at=watched_at))
         return tv
     else:
-        raise ValueError(f"Invalid input type: {type(input)}")
+        assert_never(input)
 
 
 def _parse_datetime(
