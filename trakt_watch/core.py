@@ -58,7 +58,7 @@ class TVShowId(NamedTuple):
 Input = Union[MovieId, EpisodeId, TVShowId]
 
 
-SEARCH_MAPPING = {
+SEARCH_MAPPING: dict[str, str | None] = {
     "M": "movie",
     "S": "show",
     "I": "show",
