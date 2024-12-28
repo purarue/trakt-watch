@@ -4,6 +4,7 @@ import sys
 import os
 import json
 from typing import (
+    cast,
     get_args,
     assert_never,
     TypeVar,
@@ -24,7 +25,7 @@ import click
 from logzero import logger  # type: ignore[import]
 
 from trakt.movies import Movie as TraktMovie  # type: ignore[import]
-from trakt.tv import TVShow as TraktTVShow, TVEpisode as TraktTVEpisode  # type: ignore[import]
+from trakt.tv import TVSeason, TVShow as TraktTVShow, TVEpisode as TraktTVEpisode  # type: ignore[import]
 
 USERNAME: Optional[str] = None
 
@@ -74,7 +75,7 @@ class TVShowId(NamedTuple):
     id: str
 
     def trakt(self) -> TraktTVShow:
-        tv = TraktTVShow(self.id)
+        tv = TraktTVShow(self.id, slug=self.id)
         tv._get()
         return tv
 
@@ -608,6 +609,17 @@ def recent(limit: int, urls: bool, history_type: Optional[HistoryType]) -> None:
     )
 
 
+def _unwrap_int(value: Any, error_msg: str) -> int:
+    if isinstance(value, int):
+        return value
+    elif isinstance(value, str) and value.isdigit():
+        return int(value)
+    elif isinstance(value, float):
+        return int(value)
+    else:
+        raise ValueError(f"Invalid value, expected int: {value}")
+
+
 @main.command(short_help="mark next episode in progress")
 @click.option("-u", "--urls", is_flag=True, default=False, help="print URLs for items")
 @click.option("-s", "--specials", is_flag=True, default=False, help="include specials")
@@ -704,36 +716,76 @@ def progress(
         sleep_time=0,
     )
 
-    if not next_data:
-        click.secho(
-            f"No progress found for {picked.media_data.show.title}", fg="red", err=True
-        )
-        return
-
-    # get data from next_data and prompt the user to confirm
-    assert "next_episode" in next_data, f"Invalid next_data: {next_data}"
-    next_ep = next_data["next_episode"]
-    if next_ep is None:
-        click.secho(
-            f"No next episode found for {picked.media_data.show.title}",
-            fg="red",
-            err=True,
-        )
-        return
-    assert isinstance(next_ep, dict), f"Invalid next_ep: {next_ep}"
+    next_season: int
+    next_episode: int
 
     next_show_slug = (
         picked.media_data.ids.trakt_slug or picked.media_data.show.ids.trakt_slug
     )
     assert isinstance(next_show_slug, str), f"Invalid next_show_slug: {next_show_slug}"
-    next_episode = next_ep.get("number")
-    assert isinstance(next_episode, int), f"Invalid next_episode: {next_episode}"
-    next_season = next_ep.get("season")
-    assert isinstance(next_season, int), f"Invalid next_season: {next_season}"
 
-    next_episode_title = next_ep.get("title")
-    if next_episode_title is None:
+    if next_ep := next_data.get("next_episode"):
+        assert isinstance(next_ep, dict), f"Invalid next_ep: {next_ep}"
+        # if the 'next_episode' request succeeded, use that
+        if next_ep is None:
+            click.secho(
+                f"No next episode found for {picked.media_data.show.title}",
+                fg="red",
+                err=True,
+            )
+            return
+        assert isinstance(next_ep, dict), f"Invalid next_ep: {next_ep}"
+
+        next_episode = _unwrap_int(
+            next_ep.get("number"), f"Invalid next_episode {next_ep.get('number')}"
+        )
+        next_season = _unwrap_int(
+            next_ep.get("season"), f"Invalid next_season {next_ep.get('season')}"
+        )
+        next_episode_title = next_ep.get("title") or "--"
+    else:
         next_episode_title = "--"
+        # otherwise, use the last item in progress to find the next episode
+        # by making a request to trakt to find the next episode manually
+        #
+        # this often happens when Im rewatching a show
+        cur_season = picked.media_data.season
+        cur_episode = picked.media_data.episode
+
+        trakt_id = TVShowId(next_show_slug)
+        trakt_obj = trakt_id.trakt()
+        assert isinstance(trakt_obj.seasons, list)
+        seasons = cast(List[TVSeason], trakt_obj.seasons)
+        season_data: dict[int, TVSeason] = {s.season: s for s in seasons}
+
+        current_season_obj = season_data.get(cur_season)
+        if current_season_obj is None:
+            click.secho(
+                f"Could not find the current season for {trakt_obj.title}",
+                fg="red",
+                err=True,
+            )
+            return
+        # if next ep exists in current season, use that
+        for ep in current_season_obj.episodes:
+            if ep.number == cur_episode + 1:
+                next_episode = ep.number
+                next_season = ep.season
+                next_episode_title = ep.title
+        else:
+            next_season_obj = season_data.get(cur_season + 1)
+            if next_season_obj is None:
+                click.secho(
+                    f"Could not find the next season for {trakt_obj.title}",
+                    fg="red",
+                    err=True,
+                )
+                return
+            else:
+                # else use the next season, if it exists
+                next_season = cur_season + 1
+                next_episode = 1
+                next_episode_title = next_season_obj.episodes[0].title
 
     next_ep_str = f"{next_episode_title} (S{next_season}E{next_episode})"
 
