@@ -110,7 +110,9 @@ def search_trakt(
     pressed: str | None = None
     media_type: Optional[str] = None
     if show_url := os.environ.get("TRAKT_WATCH_SHOW"):
-        return EpisodeId.from_cli(id=parse_url_to_input(show_url).id)
+        tv_obj = parse_url_to_input(show_url)
+        click.echo(f"Show: {tv_obj.id}", err=True)
+        return EpisodeId.from_cli(id=tv_obj.id)
 
     if default_media_type is not None and default_media_type in SEARCH_MAPPING.values():
         media_type = default_media_type
