@@ -27,15 +27,18 @@ You can set the `TRAKT_USERNAME` environment variable so you don't have to pass 
 Usage: trakt-watch [OPTIONS] COMMAND [ARGS]...
 
 Options:
-  -u, --username TEXT  Trakt username  [env var: TRAKT_USERNAME; required]
+  -u, --username TEXT  Trakt username  [env var: TRAKT_USERNAME;
+                       required]
   -h, --help           Show this message and exit.
 
 Commands:
-  progress  mark next episode in progress
-  rate      rate movie/tv show/episode
-  recent    show recent history
-  unwatch   remove recent watched item
-  watch     mark movie/episode as watched
+  letterboxd  open letterboxd.com entry
+  progress    mark next episode in progress
+  rate        rate movie/tv show/episode
+  recent      show recent history
+  unrate      unrate movie/tv show/episode
+  unwatch     remove recent watched item
+  watch       mark movie/episode as watched
 ```
 
 To watch entries, you can provide a URL, or search for a movie/TV show/episode. By default, will use now as the watched time:
