@@ -19,9 +19,6 @@ from datetime import datetime, timezone
 import click
 from logzero import logger  # type: ignore[import]
 
-from trakt.movies import Movie as TraktMovie  # type: ignore[import]
-from trakt.tv import TVSeason, TVShow as TraktTVShow  # type: ignore[import]
-
 from .core import (
     TVShowId,
     MovieId,
@@ -191,6 +188,9 @@ def _open_url(url: str) -> None:
 
 
 def _open_letterboxd(media: TraktType, policy: LetterboxdPolicy) -> bool:
+    from trakt.movies import Movie as TraktMovie  # type: ignore[import]
+    from trakt.tv import TVShow as TraktTVShow  # type: ignore[import]
+
     # dont try to open for people/episodes
     # entire TV shows are sometimes on letterboxd if they dont have multiple
     # seasons, and movies obviously are on lb
@@ -544,6 +544,8 @@ def progress(
         )
         next_episode_title = next_ep_data.get("title") or "--"
     else:
+        from trakt.tv import TVSeason  # type: ignore[import]
+
         next_episode_title = "--"
         # otherwise, use the last item in progress to find the next episode
         # by making a request to trakt to find the next episode manually

@@ -152,8 +152,8 @@ def search_trakt(
             click.echo(f"{i}: {display_search_entry(result, print_urls=show_urls)}")
 
     result = pick_item(_display_items, prompt_prefix="Pick result", items=results)
-
     result._get()
+
     inp = parse_url_to_input(f"https://trakt.tv/{result.ext}")
     if pressed == "I":
         inp = EpisodeId.from_cli(inp.id)
