@@ -4,7 +4,6 @@ import sys
 import os
 import json
 from typing import (
-    cast,
     get_args,
     assert_never,
     TypeVar,
@@ -625,6 +624,13 @@ def _unwrap_int(value: Any, error_msg: str) -> int:
 @click.option("-s", "--specials", is_flag=True, default=False, help="include specials")
 @click.option("-y", "--yes", is_flag=True, default=False, help="Skip confirmation")
 @click.option(
+    "-m",
+    "--manual-next-ep",
+    is_flag=True,
+    default=False,
+    help="manually compute the next episode using the last watched, instead of asking trakt",
+)
+@click.option(
     "-a",
     "--at",
     metavar="DATE",
@@ -634,7 +640,12 @@ def _unwrap_int(value: Any, error_msg: str) -> int:
 )
 @click.argument("LIMIT", type=int, nargs=-1)
 def progress(
-    urls: bool, yes: bool, specials: bool, at: datetime, limit: Sequence[int]
+    urls: bool,
+    yes: bool,
+    specials: bool,
+    at: datetime,
+    limit: Sequence[int],
+    manual_next_ep: bool,
 ) -> None:
     """
     Mark next episode in progress as watched
@@ -709,12 +720,15 @@ def progress(
         picked.media_data.show, Show
     ), f"Invalid show: {picked.media_data.show}"
 
-    # find next episode using watched progress
-    next_data = _trakt_request(
-        f"shows/{picked.media_data.show.ids.trakt_id}/progress/watched?hidden=true&specials={str(specials).lower()}",
-        logger=None,
-        sleep_time=0,
-    )
+    if manual_next_ep is False:
+        # find next episode using watched progress
+        next_data = _trakt_request(
+            f"shows/{picked.media_data.show.ids.trakt_id}/progress/watched?hidden=true&specials={str(specials).lower()}",
+            logger=None,
+            sleep_time=0,
+        )
+    else:
+        next_data = {"next_episode": None}
 
     next_season: int
     next_episode: int
@@ -724,25 +738,19 @@ def progress(
     )
     assert isinstance(next_show_slug, str), f"Invalid next_show_slug: {next_show_slug}"
 
-    if next_ep := next_data.get("next_episode"):
-        assert isinstance(next_ep, dict), f"Invalid next_ep: {next_ep}"
-        # if the 'next_episode' request succeeded, use that
-        if next_ep is None:
-            click.secho(
-                f"No next episode found for {picked.media_data.show.title}",
-                fg="red",
-                err=True,
-            )
-            return
-        assert isinstance(next_ep, dict), f"Invalid next_ep: {next_ep}"
+    next_ep_data = next_data.get("next_episode")
+    if manual_next_ep is True and next_ep_data is not None:
+        assert isinstance(next_ep_data, dict), f"Invalid next_ep: {next_ep_data}"
 
         next_episode = _unwrap_int(
-            next_ep.get("number"), f"Invalid next_episode {next_ep.get('number')}"
+            next_ep_data.get("number"),
+            f"Invalid next_episode {next_ep_data.get('number')}",
         )
         next_season = _unwrap_int(
-            next_ep.get("season"), f"Invalid next_season {next_ep.get('season')}"
+            next_ep_data.get("season"),
+            f"Invalid next_season {next_ep_data.get('season')}",
         )
-        next_episode_title = next_ep.get("title") or "--"
+        next_episode_title = next_ep_data.get("title") or "--"
     else:
         next_episode_title = "--"
         # otherwise, use the last item in progress to find the next episode
@@ -755,7 +763,7 @@ def progress(
         trakt_id = TVShowId(next_show_slug)
         trakt_obj = trakt_id.trakt()
         assert isinstance(trakt_obj.seasons, list)
-        seasons = cast(List[TVSeason], trakt_obj.seasons)
+        seasons = trakt_obj.seasons
         season_data: dict[int, TVSeason] = {s.season: s for s in seasons}
 
         current_season_obj = season_data.get(cur_season)
@@ -772,7 +780,9 @@ def progress(
                 next_episode = ep.number
                 next_season = ep.season
                 next_episode_title = ep.title
+                break
         else:
+            # if we didn't find the next episode in current season
             next_season_obj = season_data.get(cur_season + 1)
             if next_season_obj is None:
                 click.secho(
