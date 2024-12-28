@@ -6,6 +6,7 @@ import json
 from typing import (
     get_args,
     assert_never,
+    Self,
     TypeVar,
     List,
     Sequence,
@@ -61,6 +62,14 @@ class EpisodeId(NamedTuple):
     id: str
     season: int
     episode: int
+
+    @classmethod
+    def from_cli(cls, id: str) -> Self:
+        return cls(
+            id=id,
+            season=click.prompt("Season", type=int),
+            episode=click.prompt("Episode", type=int),
+        )
 
     def trakt(self) -> TraktTVEpisode:
         from trakt.tv import TVEpisode
@@ -314,6 +323,9 @@ def _search_trakt(
     # types
     pressed: str | None = None
     media_type: Optional[str] = None
+    if show_url := os.environ.get("TRAKT_WATCH_SHOW"):
+        return EpisodeId.from_cli(id=_parse_url_to_input(show_url).id)
+
     if default_media_type is not None and default_media_type in SEARCH_MAPPING.values():
         media_type = default_media_type
     else:
@@ -358,19 +370,14 @@ def _search_trakt(
     result._get()
     inp = _parse_url_to_input(f"https://trakt.tv/{result.ext}")
     if pressed == "I":
-        season = click.prompt("Season", type=int)
-        episode = click.prompt("Episode", type=int)
-        inp = EpisodeId(inp.id, season, episode)
+        inp = EpisodeId.from_cli(inp.id)
     return inp
 
 
 def _handle_input(
     ctx: click.Context, param: click.Argument, url: Optional[str]
 ) -> Input:
-    if url is not None:
-        if not url.strip():
-            click.secho("No URL passed", err=True, fg="red")
-            sys.exit(1)
+    if url is not None and url.strip():
         return _parse_url_to_input(url)
     else:
         return _search_trakt()
