@@ -160,7 +160,10 @@ def _handle_input(
     ctx: click.Context, param: click.Argument, url: Optional[str]
 ) -> Input:
     if url is not None and url.strip():
-        return parse_url_to_input(url)
+        try:
+            return parse_url_to_input(url)
+        except ValueError as e:
+            raise click.BadParameter(message=str(e))
     else:
         return search_trakt()
 
