@@ -215,7 +215,7 @@ def pick_item(
     items: List[T],
     show_urls_default: bool = False,
 ) -> T:
-    choice: Optional[int] = None
+    choice: Union[int, None, Literal["u"]] = None
     show_urls = show_urls_default
     while choice is None:
         show_options(show_urls, items)
