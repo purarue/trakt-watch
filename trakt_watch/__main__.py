@@ -348,7 +348,7 @@ def unwatch(interactive: bool, yes: bool, limit: int, urls: bool) -> None:
     if interactive:
 
         def _display_items(show_urls: bool, items: List[HistoryEntry]) -> None:
-            click.echo("Recent history:")
+            click.secho("Recent history:", bold=True)
             for i, entry in enumerate(items, 1):
                 click.echo(
                     f"{i}: {_display_history_entry(entry, include_id=True, print_urls=show_urls)}"
@@ -488,7 +488,7 @@ def progress(
                 prog[entry.media_data.show.ids.trakt_id] = entry
 
     def _display_items(show_urls: bool, items: List[HistoryEntry]) -> None:
-        click.echo("Progress:")
+        click.secho("Progress:", bold=True)
         for i, entry in enumerate(items, 1):
             click.echo(
                 f"{i}: {_display_history_entry(entry, include_id=True, print_urls=show_urls)}"

@@ -149,7 +149,7 @@ def search_trakt(
         raise click.ClickException("No results found")
 
     def _display_items(show_urls: bool, items: List[TraktType]) -> None:
-        click.echo("Results:")
+        click.secho("Results:", bold=True)
         for i, result in enumerate(items, 1):
             click.echo(f"{i}: {display_search_entry(result, print_urls=show_urls)}")
 
