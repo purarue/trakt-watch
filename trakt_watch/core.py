@@ -230,11 +230,9 @@ def pick_item(
             show_urls = not show_urls
             choice = None
             continue
-        assert isinstance(
-            choice, int
-        ), f"Invalid choice type: {choice} {type(choice)}, should be int"
-        if choice < 1 or choice > len(items):
+        if isinstance(choice, int) and (choice < 1 or choice > len(items)):
             click.secho(f"Invalid choice, must be 1-{len(items)}", fg="red", err=True)
             choice = None
 
+    assert isinstance(choice, int)
     return items[choice - 1]
