@@ -15,6 +15,8 @@ import click
 from trakt.movies import Movie as TraktMovie  # type: ignore[import]
 from trakt.tv import TVShow as TraktTVShow, TVEpisode as TraktTVEpisode  # type: ignore[import]
 
+T = TypeVar("T")
+
 
 class MovieId(NamedTuple):
     id: str
@@ -191,20 +193,26 @@ TraktType = Union[TraktMovie, TraktTVEpisode, TraktTVShow]
 
 def _handle_pick_result(
     user_input: str,
+    items: List[T],
+    display_entry: Optional[Callable[[T], str]] = None,
 ) -> Union[int, Literal["u"], None]:
     if user_input.strip() in {"n", "q"}:
         raise click.Abort()
     if user_input.strip() == "u":
         return "u"
-    try:
-        choice = int(user_input)
-        return choice
-    except ValueError:
-        click.secho(f"Could not parse '{user_input}' into a number", fg="red", err=True)
-        return None
-
-
-T = TypeVar("T")
+    if user_input.strip().isdigit():
+        try:
+            return int(user_input)
+        except ValueError:
+            click.secho(
+                f"Could not parse '{user_input}' into a number", fg="red", err=True
+            )
+    if display_entry is not None:
+        for i, item in enumerate(items, 1):
+            if user_input.lower() in display_entry(item).lower():
+                return i
+    click.secho(f"No match for '{user_input}'", fg="red", err=True)
+    return None
 
 
 def pick_item(
@@ -214,15 +222,16 @@ def pick_item(
     prompt_prefix: str,
     items: List[T],
     show_urls_default: bool = False,
+    display_entry: Optional[Callable[[T], str]] = None,
 ) -> T:
-    choice: Union[int, None, Literal["u"]] = None
+    choice: Union[int, Literal["u"], None] = None
     show_urls = show_urls_default
     while choice is None:
         show_options(show_urls, items)
         choice = click.prompt(
-            f"{prompt_prefix}, enter 1-{len(items)}, q to quit, u to {'hide' if show_urls else 'show'} URLs",
+            f"{prompt_prefix}, enter 1-{len(items)}{' or show name' if display_entry is not None else ''}, q to quit, u to {'hide' if show_urls else 'show'} URLs",
             default="1",
-            value_proc=_handle_pick_result,
+            value_proc=lambda s: _handle_pick_result(s, items, display_entry),
         )
         if choice is None:
             continue

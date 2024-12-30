@@ -491,7 +491,7 @@ def progress(
         click.secho("Progress:", bold=True)
         for i, entry in enumerate(items, 1):
             click.echo(
-                f"{i}: {_display_history_entry(entry, include_id=True, print_urls=show_urls)}"
+                f"{i}: {_display_history_entry(entry, include_id=False, print_urls=show_urls)}"
             )
 
     # sort by most recently watched_at
@@ -506,6 +506,7 @@ def progress(
         prompt_prefix="Pick show, will mark the next episode as watched",
         items=current_eps,
         show_urls_default=urls,
+        display_entry=_display_history_entry,
     )
 
     assert isinstance(
