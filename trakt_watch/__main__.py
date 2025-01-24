@@ -22,6 +22,7 @@ from logzero import logger  # type: ignore[import]
 from .core import (
     TVShowId,
     MovieId,
+    parse_query_to_arguments,
     pick_item,
     search_trakt,
     parse_url_to_input,
@@ -160,6 +161,11 @@ def _handle_input(
     ctx: click.Context, param: click.Argument, url: Optional[str]
 ) -> Input:
     if url is not None and url.strip():
+        if search_term := parse_query_to_arguments(url):
+            search_query, media_type = search_term
+            return search_trakt(
+                search_query=search_query, default_media_type=media_type
+            )
         try:
             return parse_url_to_input(url)
         except ValueError as e:

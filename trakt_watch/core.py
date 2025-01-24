@@ -104,8 +104,12 @@ def display_search_entry(entry: Any, *, print_urls: bool = False) -> str:
 
 
 def search_trakt(
-    *, default_media_type: str | None = None, prompt_str: str = ""
+    *, default_media_type: str | None = None, search_query: str = "", **kwargs: str
 ) -> Input:
+    # handle deprecations
+    if "prompt_str" in kwargs and not search_query:
+        click.secho("Use 'search_query' instead of 'prompt_str'", fg="yellow")
+        search_query = kwargs["prompt_str"]
     # prompt user to ask if they want to search for a
     # particular type of media, else just search for all
     # types
@@ -141,11 +145,9 @@ def search_trakt(
 
     from trakt.sync import search  # type: ignore[import]
 
-    if prompt_str.strip():
-        search_term = prompt_str
-    else:
-        search_term = click.prompt(f"Search for {media_type or 'all'}", type=str)
-    results = search(search_term, search_type=media_type)  # type: ignore[arg-type]
+    if not search_query.strip():
+        search_query = click.prompt(f"Search for {media_type or 'all'}", type=str)
+    results = search(search_query, search_type=media_type)  # type: ignore[arg-type]
 
     if not results:
         raise click.ClickException("No results found")
@@ -164,13 +166,49 @@ def search_trakt(
     return inp
 
 
+def parse_query_to_arguments(url: str) -> Optional[tuple[str, str | None]]:
+    """
+    >>> parse_url_to_query('q://the princess bride')
+    ('the princess bride', None)
+    >>> parse_url_to_query('q+movie://the princess bride')
+    ('the princess bride', 'movie')
+    >>> parse_url_to_query('q+show://futurama')
+    ('futurama', 'show')
+
+    # these should not parse
+    >>> parse_url_to_query('the princess bride')
+    >>> parse_url_to_query('https://trakt.tv/movies/food-will-win-the-war-1942')
+    >>> parse_url_to_query('the princess bride')
+    """
+    if "://" in url:
+        scheme, term = url.split("://", maxsplit=1)
+        if term or scheme:
+            if scheme == "q":
+                return term, None
+            media_types = {m for m in SEARCH_MAPPING.values() if m}
+            for search_type in media_types:
+                if not search_type:
+                    continue
+                if scheme == f"q+{search_type}":
+                    return term, search_type
+            else:
+                if "+" in scheme:
+                    click.secho(
+                        f"Warning: '+' in scheme '{scheme}', but did not match known media schemes: {', '.join([f'q+{m}' for m in media_types])}",
+                        fg="yellow",
+                    )
+                return None
+    else:
+        return None
+
+
 def parse_url_to_input(url: str) -> Input:
     from urllib.parse import urlsplit
 
     parts = urlsplit(url)
     if parts.netloc != "trakt.tv":
         click.secho(
-            f"Warning; Invalid URL netloc: {parts.netloc}, expected trakt.tv",
+            f"Warning; Invalid URL netloc: '{parts.netloc}', expected trakt.tv",
             fg="yellow",
             err=True,
         )
