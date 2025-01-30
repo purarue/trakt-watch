@@ -198,8 +198,7 @@ def parse_query_to_arguments(url: str) -> Optional[tuple[str, str | None]]:
                         fg="yellow",
                     )
                 return None
-    else:
-        return None
+    return None
 
 
 def parse_url_to_input(url: str) -> Input:
