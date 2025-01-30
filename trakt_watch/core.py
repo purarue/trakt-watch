@@ -109,7 +109,7 @@ def search_trakt(
     # handle deprecations
     if "prompt_str" in kwargs and not search_query:
         click.secho("Use 'search_query' instead of 'prompt_str'", fg="yellow")
-        search_query = kwargs["prompt_str"]
+        search_query = kwargs.pop("prompt_str")
     # prompt user to ask if they want to search for a
     # particular type of media, else just search for all
     # types
