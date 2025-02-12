@@ -127,7 +127,7 @@ Examples:
 
 - `--url 'q://the princess bride'`: This will set the query string to `the princess bride`, but you will still have to select a media type.
 - `--url 'q+movie://the princess bride'`: Sets the search type to `movie`, and the query to `the princess bride`
-- `--url 'q+episode://futurama flight to remember'`: searches for the futurama episode a flight to remember
+- `--url 'q+episode://futurama flight to remember'`: searches for the futurama episode 'a flight to remember'.
 
 ### letterboxd
 
