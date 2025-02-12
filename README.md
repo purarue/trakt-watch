@@ -119,6 +119,16 @@ Episode: 8
 
 The `progress` command works similarly to `watch`, but it presents you with a list of recently watched episodes, querying trakt for the 'next episode' like on the progress page on the trakt website.
 
+### Searching with custom `--url`s:
+
+You can provide a custom scheme with the `--url` flag to search from the CLI rather than providing the text interactively.
+
+Examples:
+
+- `--url 'q://the princess bride'`: This will set the query string to `the princess bride`, but you will still have to select a media type.
+- `--url 'q+movie://the princess bride'`: Sets the search type to `movie`, and the query to `the princess bride`
+- `--url 'q+episode://futurama flight to remember'`: searches for the futurama episode a flight to remember
+
 ### letterboxd
 
 The `letterboxd` command can be used to search for a trakt entry, and then open the corresponding letterboxd URL using the TMDB ID. This is useful since letterboxd doesn't have an API, so we can use trakt's as a stand-in. I put this shell function in my shell startup:
