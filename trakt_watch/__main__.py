@@ -693,6 +693,22 @@ def rate(inp: Input, rating: int, letterboxd: LetterboxdPolicy) -> None:
     _open_letterboxd(media, policy=letterboxd)
 
 
+@main.command(short_help="open url in your browser", name="open")
+@click.option(
+    "--url",
+    "inp",
+    help="URL to open",
+    default=None,
+    type=str,
+    callback=_handle_input,
+)
+def open_url(inp: Input) -> None:
+    """
+    Open an url in your browser
+    """
+    _open_url(f"https://trakt.tv/{inp.trakt().ext}")
+
+
 @main.command(short_help="unrate movie/tv show/episode")
 @click.option(
     "--url",

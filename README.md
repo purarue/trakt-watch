@@ -27,12 +27,12 @@ You can set the `TRAKT_USERNAME` environment variable so you don't have to pass 
 Usage: trakt-watch [OPTIONS] COMMAND [ARGS]...
 
 Options:
-  -u, --username TEXT  Trakt username  [env var: TRAKT_USERNAME;
-                       required]
+  -u, --username TEXT  Trakt username  [env var: TRAKT_USERNAME; required]
   -h, --help           Show this message and exit.
 
 Commands:
   letterboxd  open letterboxd.com entry
+  open        open url in your browser
   progress    mark next episode in progress
   rate        rate movie/tv show/episode
   recent      show recent history

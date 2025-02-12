@@ -14,6 +14,7 @@ import click
 
 from trakt.movies import Movie as TraktMovie  # type: ignore[import]
 from trakt.tv import TVShow as TraktTVShow, TVEpisode as TraktTVEpisode  # type: ignore[import]
+from trakt.people import Person as TraktPerson  # type: ignore[import]
 
 T = TypeVar("T")
 
@@ -72,8 +73,6 @@ allowed = ["M", "S", "I", "E", "A", "U"]
 
 
 def display_search_entry(entry: Any, *, print_urls: bool = False) -> str:
-    from trakt.people import Person as TraktPerson  # type: ignore[import]
-
     buf: str = ""
     if isinstance(entry, TraktMovie):
         buf += f"Movie:\t{entry.title} ({entry.year})"
