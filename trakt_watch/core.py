@@ -156,7 +156,12 @@ def search_trakt(
         for i, result in enumerate(items, 1):
             click.echo(f"{i}: {display_search_entry(result, print_urls=show_urls)}")
 
-    result = pick_item(_display_items, prompt_prefix="Pick result", items=results)
+    result = pick_item(
+        _display_items,
+        prompt_prefix="Pick result",
+        items=results,
+        display_entry=display_search_entry,
+    )
     result._get()
 
     inp = parse_url_to_input(f"https://trakt.tv/{result.ext}")

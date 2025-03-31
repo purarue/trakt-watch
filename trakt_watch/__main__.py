@@ -365,6 +365,7 @@ def unwatch(interactive: bool, yes: bool, limit: int, urls: bool) -> None:
             prompt_prefix="Pick item to remove",
             items=data,
             show_urls_default=urls,
+            display_entry=_display_history_entry,
         )
 
     click.echo(
