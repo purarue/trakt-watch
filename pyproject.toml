@@ -1,0 +1,60 @@
+[project]
+name = "trakt_watch"
+version = "0.1.2"
+description = "a small CLI to mark items watched on trakt"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+requires-python = ">=3.11"
+classifiers = [
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+]
+dependencies = [
+  "click>=8.1.6",
+  "dateparser",
+  "pytrakt>=3.4.30",
+  "traktexport>=0.1.8",
+]
+[[project.authors]]
+name = "purarue"
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project.scripts]
+trakt-watch = "trakt_watch.__main__:main"
+
+[project.urls]
+Homepage = "https://github.com/purarue/trakt-watch"
+
+[project.optional-dependencies]
+testing = ["flake8", "mypy"]
+
+[tool.mypy]
+pretty = "True"
+show_error_context = "True"
+show_error_codes = "True"
+check_untyped_defs = "True"
+namespace_packages = "True"
+disallow_any_generics = "True"
+disallow_subclassing_any = "True"
+disallow_untyped_calls = "True"
+disallow_untyped_defs = "True"
+disallow_incomplete_defs = "True"
+no_implicit_optional = "True"
+warn_redundant_casts = "True"
+warn_return_any = "True"
+warn_unreachable = "True"
+
+[tool.pytest.ini_options]
+addopts = []
+
+[tool.setuptools.packages.find]
+include = ["trakt_watch"]
+exclude = []
