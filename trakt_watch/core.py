@@ -209,7 +209,7 @@ def parse_url_to_input(url: str) -> Input:
     from urllib.parse import urlsplit
 
     parts = urlsplit(url)
-    if parts.netloc != "trakt.tv":
+    if parts.netloc not in {"trakt.tv", "app.trakt.tv"}:
         click.secho(
             f"Warning; Invalid URL netloc: '{parts.netloc}', expected trakt.tv",
             fg="yellow",
