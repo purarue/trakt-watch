@@ -5,15 +5,10 @@ import json
 from typing import (
     get_args,
     assert_never,
-    List,
-    Sequence,
     Literal,
-    Optional,
-    Union,
-    Iterator,
-    Iterable,
     Any,
 )
+from collections.abc import Sequence, Iterator, Iterable
 from datetime import datetime, timezone
 
 import click
@@ -32,7 +27,7 @@ from .core import (
 )
 
 
-USERNAME: Optional[str] = None
+USERNAME: str | None = None
 
 
 @click.group(
@@ -106,8 +101,8 @@ def _print_response(d: Any, rating: bool = False) -> None:
 def _mark_watched(
     input: Input,
     *,
-    watched_at: Union[datetime, None, Literal["released"]] = None,
-    rating: Optional[int] = None,
+    watched_at: datetime | None | Literal["released"] = None,
+    rating: int | None = None,
 ) -> TraktType:
     if isinstance(input, MovieId):
         mv = input.trakt()
@@ -133,8 +128,8 @@ def _mark_watched(
 
 
 def _parse_datetime(
-    ctx: click.Context, param: click.Argument, value: Optional[str]
-) -> Union[datetime, None, Literal["released"]]:
+    ctx: click.Context, param: click.Argument, value: str | None
+) -> datetime | None | Literal["released"]:
     import dateparser
     import warnings
 
@@ -158,7 +153,7 @@ def _parse_datetime(
 
 
 def _handle_input(
-    ctx: click.Context, param: click.Argument, url: Optional[str]
+    ctx: click.Context, param: click.Argument, url: str | None
 ) -> Input:
     if url is not None and url.strip():
         if search_term := parse_query_to_arguments(url):
@@ -265,8 +260,8 @@ def _open_letterboxd(media: TraktType, policy: LetterboxdPolicy) -> bool:
 )
 def watch(
     inp: Input,
-    at: Union[datetime, Literal["released"], None],
-    rating: Optional[int],
+    at: datetime | Literal["released"] | None,
+    rating: int | None,
     letterboxd: LetterboxdPolicy,
 ) -> None:
     """
@@ -283,7 +278,7 @@ HistoryType = Literal["movies", "episodes"]
 
 
 def _recent_history_entries(
-    *, limit: int = 10, page: int = 1, history_type: Optional[HistoryType] = None
+    *, limit: int = 10, page: int = 1, history_type: HistoryType | None = None
 ) -> Iterator[HistoryEntry]:
     from traktexport.export import _trakt_request
 
@@ -353,7 +348,7 @@ def unwatch(interactive: bool, yes: bool, limit: int, urls: bool) -> None:
     print_urls = False
     if interactive:
 
-        def _display_items(show_urls: bool, items: List[HistoryEntry]) -> None:
+        def _display_items(show_urls: bool, items: list[HistoryEntry]) -> None:
             click.secho("Recent history:", bold=True)
             for i, entry in enumerate(items, 1):
                 click.echo(
@@ -401,7 +396,7 @@ def unwatch(interactive: bool, yes: bool, limit: int, urls: bool) -> None:
 )
 @click.option("-u", "--urls", is_flag=True, default=False, help="print URLs for items")
 @click.argument("limit", type=int, default=10)
-def recent(limit: int, urls: bool, history_type: Optional[HistoryType]) -> None:
+def recent(limit: int, urls: bool, history_type: HistoryType | None) -> None:
     """
     Show recent history
     """
@@ -494,7 +489,7 @@ def progress(
             if entry.watched_at > prog[entry.media_data.show.ids.trakt_id].watched_at:
                 prog[entry.media_data.show.ids.trakt_id] = entry
 
-    def _display_items(show_urls: bool, items: List[HistoryEntry]) -> None:
+    def _display_items(show_urls: bool, items: list[HistoryEntry]) -> None:
         click.secho("Progress:", bold=True)
         for i, entry in enumerate(items, 1):
             click.echo(

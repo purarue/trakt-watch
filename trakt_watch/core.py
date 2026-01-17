@@ -2,14 +2,12 @@ import os
 from typing import (
     Self,
     TypeVar,
-    List,
     Literal,
-    Callable,
-    Optional,
     NamedTuple,
     Union,
     Any,
 )
+from collections.abc import Callable
 import click
 
 from trakt.movies import Movie as TraktMovie  # type: ignore[import]
@@ -113,7 +111,7 @@ def search_trakt(
     # particular type of media, else just search for all
     # types
     pressed: str | None = None
-    media_type: Optional[str] = None
+    media_type: str | None = None
     if show_url := os.environ.get("TRAKT_WATCH_SHOW"):
         tv_obj = parse_url_to_input(show_url)
         click.echo(f"Show: {tv_obj.id}", err=True)
@@ -151,7 +149,7 @@ def search_trakt(
     if not results:
         raise click.ClickException("No results found")
 
-    def _display_items(show_urls: bool, items: List[TraktType]) -> None:
+    def _display_items(show_urls: bool, items: list[TraktType]) -> None:
         click.secho("Results:", bold=True)
         for i, result in enumerate(items, 1):
             click.echo(f"{i}: {display_search_entry(result, print_urls=show_urls)}")
@@ -170,7 +168,7 @@ def search_trakt(
     return inp
 
 
-def parse_query_to_arguments(url: str) -> Optional[tuple[str, str | None]]:
+def parse_query_to_arguments(url: str) -> tuple[str, str | None] | None:
     """
     >>> parse_url_to_query('q://the princess bride')
     ('the princess bride', None)
@@ -234,9 +232,9 @@ TraktType = Union[TraktMovie, TraktTVEpisode, TraktTVShow]
 
 def _handle_pick_result(
     user_input: str,
-    items: List[T],
-    display_entry: Optional[Callable[[T], str]] = None,
-) -> Union[int, Literal["u"], None]:
+    items: list[T],
+    display_entry: Callable[[T], str] | None = None,
+) -> int | Literal["u"] | None:
     if user_input.strip() in {"n", "q"}:
         raise click.Abort()
     if user_input.strip() == "u":
@@ -257,15 +255,15 @@ def _handle_pick_result(
 
 
 def pick_item(
-    show_options: Callable[[bool, List[T]], None],
+    show_options: Callable[[bool, list[T]], None],
     /,
     *,
     prompt_prefix: str,
-    items: List[T],
+    items: list[T],
     show_urls_default: bool = False,
-    display_entry: Optional[Callable[[T], str]] = None,
+    display_entry: Callable[[T], str] | None = None,
 ) -> T:
-    choice: Union[int, Literal["u"], None] = None
+    choice: int | Literal["u"] | None = None
     show_urls = show_urls_default
     while choice is None:
         show_options(show_urls, items)
